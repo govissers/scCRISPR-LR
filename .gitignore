@@ -1,0 +1,6 @@
+# Ignore everything in data, result, and tmp folder
+data/*
+result/*
+tmpfiles/*
+.DS_Store
+overlay-10GB-400K.ext3
