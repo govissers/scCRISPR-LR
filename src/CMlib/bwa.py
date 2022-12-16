@@ -14,29 +14,20 @@ def testbwa(bwabin):
     :return: bool, True: bwa tested ok. False: bwa error
     """
     bwacmd = [bwabin]
-
     bwarun = Popen(bwacmd, stdout=PIPE, stderr=PIPE, shell=True)
-
-    # bwarun.communicate()
-
     testres = False
     pat = re.compile('Version')
 
     for i in bwarun.stderr.readlines():
-
         i = i.decode('utf-8').rstrip('\n')
-
         if re.search(pat, i):
-
             testres = True
-
     bwarun.communicate()
-
     return testres
 
 
 # Return the version of bwa used
-def bwaversion(bwabin):
+def version(bwabin):
     """
     :param bwabin: bwa bin path
     :return: string, version of bwa
@@ -58,7 +49,7 @@ def bwaversion(bwabin):
     return version
 
 # Index FASTA file of target genes
-def bwaindex(bwabin, reffile, samplefolder):
+def index(bwabin, reffile, samplefolder):
     """
     bwa index
     :param bwabin: bwa bin path
@@ -66,20 +57,19 @@ def bwaindex(bwabin, reffile, samplefolder):
     :param samplefolder: sample dir
     :return: no retrun
     """
-
     refbasename = os.path.basename(os.path.abspath(reffile))
-
     dscopy = os.path.join(samplefolder, refbasename)
-
     shutil.copyfile(os.path.abspath(reffile), dscopy)
-
     bwabin = os.path.abspath(bwabin)
     bwacmd = [bwabin, 'index', refbasename]
     runbwaindex = Popen(bwacmd, cwd=samplefolder)
     runbwaindex.communicate()
 
 
-# BELOW FUNCTIONS ARE NOT USED IN THE FUNCTIONING SCRIPT BUT MAY HAVE USE, SO KEEPING IN CURRENT VERSION
+########################################################################################################
+# BELOW FUNCTIONS ARE NOT USED IN THE FUNCTIONING SCRIPT BUT MAY HAVE USE,
+# SO KEEPING IN CURRENT VERSION
+#######################################################################################################
 def bwaalign(bwabin, reffile, inputfile, outfile, threadnumber=1):
     """
     bwa mem alignment
