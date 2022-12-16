@@ -37,13 +37,9 @@ def version(bwabin):
     pat = re.compile('Version')
     version = 'None'
     for i in bwarun.stderr.readlines():
-
         i = i.decode('utf-8').rstrip('\n')
-
         if re.search(pat, i):
-
             (_, version) = i.split(' ')
-
     bwarun.communicate()
 
     return version

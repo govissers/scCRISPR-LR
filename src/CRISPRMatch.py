@@ -1,6 +1,9 @@
 import argparse
 import sys
-from CMlib import bwa, bwa_run, mut_rate, minimap2, minimap2_run
+from CMlib import bwa, bwa_run
+from CMlib import mut_rate
+from CMlib import minimap2, minimap2_run
+from CMlib import generate_dels
 import os
 import os.path
 from pyfasta import Fasta
@@ -13,10 +16,14 @@ def main():
     build = args.build
     print("build:", build, "threads:", args.threads)
 
+    # Rewrite fasta file to create large deletion variants. Returns
+    # path of rewritten fasta file with deletions
+    if args.dels == True:
+        args.genome = generate_dels.generate(args.input, args.genome)
+
     # Build Gene_fasta index
     # This will generate a .fa.flat and .fa.gdx file in the same directory
     # as your input FASTA file
-
     print("## Step 1: Build index")
     indexfile = os.path.basename(args.genome)
     index = os.path.join(args.saved, indexfile+'.sa')
@@ -32,6 +39,7 @@ def main():
         print("Loading fastq files...")
         bwa_run.prepare(args.input, args.genome, args.saved, args.bwa, args.samtools, args.picard, args.threads)
         print("bwa mem finished!")
+
     elif args.aligner == 'minimap2':
         if build:
             print(args.minimap2)
@@ -207,6 +215,7 @@ def check_options(parser):
     print("tmp output folder:",  os.path.realpath(args.saved))
     print("result output folder:", os.path.realpath(args.result))
     print("threads number:", args.threads)
+    print("gendels:", args.dels)
     print("#"*40)
     
     return args
@@ -294,6 +303,7 @@ def get_options():
     parser.add_argument('-b', '--bwa', dest='bwa', help='bwa path')
     parser.add_argument('-m', '--minimap2', dest='minimap2', help='minimap2 path')
     parser.add_argument('-bd', '--build', dest='build', help='Build index or use provided?', choices=[True,False], default=True)
+    parser.add_argument('-gd', '--dels', dest='dels', help='generate dels in fasta file for large dels', choices=[True,False], default=True)
     parser.add_argument('-sm', '--samtools', dest='samtools', help='samtools path')
     parser.add_argument('-pi', '--picard', dest='picard', help='picard path')
     parser.add_argument('-f', '--flash', dest='flash', help='flash path')

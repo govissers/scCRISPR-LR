@@ -3,9 +3,7 @@ from subprocess import Popen
 from subprocess import PIPE
 import re
 import shutil
-from CMlib import minimap2_run, subprocesspath
-import time
-import signal
+
 
 # Test if bwa is working
 def testminimap(minimapbin):
