@@ -9,7 +9,7 @@ import numpy as np
 import re
 from glob import glob
 
-def rate_cal(infofile, refname, output, bamdir):
+def rate_cal(infofile, refname, output, bamdir, dels):
     """
     :param infofile: a description file of details of each sample, example: sample_info.txt
     :param refname: a fasta format of the sequence in the target region, exaple:Samples_gene.fa
@@ -157,18 +157,19 @@ def rate_cal(infofile, refname, output, bamdir):
                             cells.loc[cellid]['len_change'][pileupread.alignment.query_name] = cells.loc[
                                 cellid]['len_change'].get(pileupread.alignment.query_name, 0) - 1
 
-            # Calclate the percentage of large deletions
-            dels = [gene+'_DEL1', gene+'_DEL2', gene+'_DEL3']
-            for deletion in dels:
-                pileup = samfile.pileup(deletion, max_depth=50000)
-                for pileupcolumn in pileup:
-                    for pileupread in pileupcolumn.pileups:
-                        cellid = pileupread.alignment.query_name[0:8]
-                        cells.loc[cellid]['totalcov'].add(pileupread.alignment.query_name)
-                        cells.loc[cellid]['large_del'].add(pileupread.alignment.query_name)
+            if dels == True:
+                # Calclate the percentage of large deletions
+                dels = [gene+'_DEL1', gene+'_DEL2', gene+'_DEL3']
+                for deletion in dels:
+                    pileup = samfile.pileup(deletion, max_depth=50000)
+                    for pileupcolumn in pileup:
+                        for pileupread in pileupcolumn.pileups:
+                            cellid = pileupread.alignment.query_name[0:8]
+                            cells.loc[cellid]['totalcov'].add(pileupread.alignment.query_name)
+                            cells.loc[cellid]['large_del'].add(pileupread.alignment.query_name)
 
             # Calculate rates of each type of mutation
-            cells = calc_mut_rates(cells)
+            cells = calc_mut_rates(cells, dels)
 
             # Populate dataframes for each mutation type
             mtdf.loc[len(mtdf.index)] = fillrow(cells, 'percent_mt', gene)
@@ -177,7 +178,8 @@ def rate_cal(infofile, refname, output, bamdir):
             insdf.loc[len(insdf.index)] = fillrow(cells, 'percent_insertion', gene)
             deldf.loc[len(deldf.index)] = fillrow(cells, 'percent_deletion', gene)
             insdeldf.loc[len(insdeldf.index)] = fillrow(cells, 'percent_insertion_deletion', gene)
-            largedeldf.loc[len(largedeldf.index)] = fillrow(cells, 'percent_largedel', gene)
+            if dels == True:
+                largedeldf.loc[len(largedeldf.index)] = fillrow(cells, 'percent_largedel', gene)
 
 
         # Make folder in output directory for given sample if it doesn't already exist
@@ -203,8 +205,9 @@ def rate_cal(infofile, refname, output, bamdir):
         insdeldfpath = os.path.join(output, sample, "insertion_deletion_rate.csv")
         insdeldf.to_csv(path_or_buf=insdeldfpath)
 
-        lgdeldfpath = os.path.join(output, sample, "large_deletion_rate.csv")
-        largedeldf.to_csv(path_or_buf=lgdeldfpath)
+        if dels == True:
+            lgdeldfpath = os.path.join(output, sample, "large_deletion_rate.csv")
+            largedeldf.to_csv(path_or_buf=lgdeldfpath)
         
     samfile.close()
 
@@ -240,7 +243,7 @@ def fillrow(celldf, colname, genename):
 
 # Helper function that takes the dataframe of read sets to calculate rates of each
 # mutation type
-def calc_mut_rates(cells):
+def calc_mut_rates(cells, dels):
     """
     :param cells: DataFrame that contains the names of reads for each mutation type, for each cell
     :return: cells DataFrame with columns new containing rates of each mutation type
@@ -257,7 +260,9 @@ def calc_mut_rates(cells):
     cells['percent_deletion_only'] = cells.apply(lambda x: (len(x.deletion_only) / len(x.totalcov)) , axis=1)
     cells['percent_insertion_only'] = cells.apply(lambda x: (len(x.insertion_only) / len(x.totalcov)) , axis=1)
     cells['percent_frameshift'] = cells.apply(lambda x: (len(x.frameshift) / len(x.totalcov)) , axis=1)
-    cells['percent_largedel'] = cells.apply(lambda x: (len(x.large_del) / len(x.totalcov)), axis = 1)
+    
+    if dels == True:
+        cells['percent_largedel'] = cells.apply(lambda x: (len(x.large_del) / len(x.totalcov)), axis = 1)
     
     return cells
 

@@ -56,7 +56,7 @@ def main():
 
     # Mutation rate calculation
     print("## Step 3: Calculate mutation rates")
-    mut_rate.rate_cal(args.input, args.genome, args.result, args.saved)
+    mut_rate.rate_cal(args.input, args.genome, args.result, args.saved, args.dels)
     print("Mutation calculation finished!")
 
 
